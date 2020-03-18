@@ -108,4 +108,31 @@ public class DataSupply {
         );
 
     }
+
+    @Test
+    public void CuccStb() {
+
+        String beginTime = "20180901";
+//        String endTime = "20191231";
+        String endTime = "20181231";
+        dateUtil.getDayList(beginTime, endTime, "yyyyMMdd", "yyyyMMdd").stream().forEach(
+                time -> {
+//                    String deleteSql = "DELETE FROM dams.USERINFO_ACTIVE_LAST_HISTORY_NEW1 WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
+//                    DBUtil.excute(deleteSql);
+                    String insertSql = "INSERT INTO DAMS.USERINFO_STB_LAST_HISTORY " +
+                            "SELECT T1.USERID,CASE WHEN T2.TYPE IS NULL THEN T1.TYPE ELSE T2.TYPE END AS TYPE,to_date('"+time+"','yyyymmdd') as time " +
+                            "FROM(  " +
+                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            ") WHERE RN = 1 ) T1 " +
+                            "LEFT JOIN " +
+                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            ") WHERE RN = 1 ) T2 " +
+                            "ON (T1.USERID = T2.USERID) " +
+                            ")UNION ALL " +
+                            "SELECT USERID,TYPE,to_date('"+time+"','yyyymmdd') as time FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') and USERID IN  " +
+                            "(SELECT USERID FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') MINUS SELECT USERID FROM DAMS.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd')) ";
+                    DBUtil.excute(insertSql);
+                }
+        );
+    }
 }
