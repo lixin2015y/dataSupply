@@ -120,19 +120,40 @@ public class DataSupply {
 //                    String deleteSql = "DELETE FROM dams.USERINFO_ACTIVE_LAST_HISTORY_NEW1 WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
 //                    DBUtil.excute(deleteSql);
                     String insertSql = "INSERT INTO DAMS.USERINFO_STB_LAST_HISTORY " +
-                            "SELECT T1.USERID,CASE WHEN T2.TYPE IS NULL THEN T1.TYPE ELSE T2.TYPE END AS TYPE,to_date('"+time+"','yyyymmdd') as time " +
+                            "SELECT T1.USERID,CASE WHEN T2.TYPE IS NULL THEN T1.TYPE ELSE T2.TYPE END AS TYPE,to_date('" + time + "','yyyymmdd') as time " +
                             "FROM(  " +
-                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_active_last_history where time = TO_date('" + time + "','yyyymmdd') " +
                             ") WHERE RN = 1 ) T1 " +
                             "LEFT JOIN " +
-                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            "(SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM DAMS.userinfo_epg_last_history where time = TO_date('" + time + "','yyyymmdd') " +
                             ") WHERE RN = 1 ) T2 " +
                             "ON (T1.USERID = T2.USERID) " +
                             ")UNION ALL " +
-                            "SELECT USERID,TYPE,to_date('"+time+"','yyyymmdd') as time FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') and USERID IN  " +
-                            "(SELECT USERID FROM DAMS.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') MINUS SELECT USERID FROM DAMS.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd')) ";
+                            "SELECT USERID,TYPE,to_date('" + time + "','yyyymmdd') as time FROM DAMS.userinfo_epg_last_history where time = TO_date('" + time + "','yyyymmdd') and USERID IN  " +
+                            "(SELECT USERID FROM DAMS.userinfo_epg_last_history where time = TO_date('" + time + "','yyyymmdd') MINUS SELECT USERID FROM DAMS.userinfo_active_last_history where time = TO_date('" + time + "','yyyymmdd')) ";
                     DBUtil.excute(insertSql);
                 }
         );
+    }
+
+    @Test
+    public void CmccCtccStb() {
+        String beginTime = "20190302";
+        String endTime = "20191231";
+//        String endTime = "20190301";
+        dateUtil.getDayList(beginTime, endTime, "yyyyMMdd", "yyyyMMdd").stream().forEach(
+                time -> {
+                    String insertSql = "INSERT INTO IPTV.USERINFO_STB_LAST_HISTORY " +
+                            "SELECT T1.USERID, CASE WHEN T2.TYPE IS NULL THEN T1.TYPE ELSE T2.TYPE END AS TYPE, to_date('"+time+"','yyyymmdd') as time " +
+                            "FROM( (SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM iptv.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            ") WHERE RN = 1 ) T1 " +
+                            "LEFT JOIN  (SELECT USERID,TYPE FROM (SELECT USERID,TYPE, ROW_NUMBER() OVER(PARTITION BY USERID ORDER BY LOGINTIME DESC) AS RN FROM iptv.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') " +
+                            ") WHERE RN = 1 ) T2 ON (T1.USERID = T2.USERID) ) " +
+                            "UNION ALL " +
+                            "SELECT USERID,TYPE,to_date('"+time+"','yyyymmdd') as time FROM iptv.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') and USERID IN (SELECT USERID FROM iptv.userinfo_epg_last_history where time = TO_date('"+time+"','yyyymmdd') MINUS SELECT USERID FROM iptv.userinfo_active_last_history where time = TO_date('"+time+"','yyyymmdd'))";
+
+                    DBUtil.excute(insertSql);
+                });
+
     }
 }
