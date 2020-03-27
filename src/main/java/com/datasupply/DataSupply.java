@@ -54,17 +54,17 @@ public class DataSupply {
 
     @Test
     public void CuccEpg() {
-        String beginTime = "20200101";
+        String beginTime = "20200322";
 //        String endTime = "2019-12-17";
-        String endTime = "20200313";
+        String endTime = "20200322";
 
 
         dateUtil.getDayList(beginTime, endTime, "yyyyMMdd", "yyyyMMdd").stream().forEach(
                 time -> {
                     String yesterday = dateUtil.minusDay(time, 1, "yyyyMMdd", "yyyyMMdd");
-//                    String deleteSql = "DELETE FROM dams.USERINFO_EPG_LAST_HISTORY_NEW WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
-//                    DBUtil.excute(deleteSql);
-                    String insertSql = "insert into dams.USERINFO_EPG_LAST_HISTORY_NEW  " +
+                    String deleteSql = "DELETE FROM dams.USERINFO_EPG_LAST_HISTORY WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
+                    DBUtil.excute(deleteSql);
+                    String insertSql = "insert into dams.USERINFO_EPG_LAST_HISTORY  " +
                             "SELECT TO_DATE('" + time + "', 'yyyymmdd') AS time, userid, MAX(logintime) AS logintime, type, MAX(state) AS state, MAX(version) AS version " +
                             "FROM (" +
                             "  SELECT userid, logintime, type, state, version " +
@@ -73,7 +73,7 @@ public class DataSupply {
                             "    AND logintime <= to_date('" + time + " 23:59:59', 'YYYYMMDD hh24:mi:ss') " +
                             "  UNION ALL " +
                             "  SELECT userid, logintime, type, state, version " +
-                            "  FROM dams.USERINFO_EPG_LAST_HISTORY_NEW WHERE time = to_date('" + yesterday + "', 'YYYYMMDD') " +
+                            "  FROM dams.USERINFO_EPG_LAST_HISTORY WHERE time = to_date('" + yesterday + "', 'YYYYMMDD') " +
                             ") " +
                             "GROUP BY userid, type";
                     DBUtil.excute(insertSql);
@@ -84,14 +84,14 @@ public class DataSupply {
 
     @Test
     public void CuccActive() {
-        String beginTime = "20200101";
-        String endTime = "20200314";
+        String beginTime = "20200322";
+        String endTime = "20200322";
         dateUtil.getDayList(beginTime, endTime, "yyyyMMdd", "yyyyMMdd").stream().forEach(
                 time -> {
                     String yesterday = dateUtil.minusDay(time, 1, "yyyyMMdd", "yyyyMMdd");
-//                    String deleteSql = "DELETE FROM dams.USERINFO_ACTIVE_LAST_HISTORY_NEW1 WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
-//                    DBUtil.excute(deleteSql);
-                    String insertSql = "INSERT INTO dams.userinfo_active_last_history1 " +
+                    String deleteSql = "DELETE FROM dams.USERINFO_ACTIVE_LAST_HISTORY WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
+                    DBUtil.excute(deleteSql);
+                    String insertSql = "INSERT INTO dams.USERINFO_ACTIVE_LAST_HISTORY " +
                             "SELECT TO_DATE('" + time + "','yyyymmdd') AS time, userid, MAX(logintime) AS logintime, type,  MAX(state) AS state, MAX(version) AS version " +
                             "FROM ( " +
                             "  SELECT userid, logintime, type, state, version " +
@@ -100,7 +100,7 @@ public class DataSupply {
                             "  AND logintime <= to_date('" + time + " 23:59:59', 'YYYYMMDD hh24:mi:ss') " +
                             "  UNION ALL " +
                             "  SELECT userid, logintime, type, state, VERSION " +
-                            "  FROM dams.userinfo_active_last_history1 WHERE TIME = TO_DATE('" + yesterday + "','yyyymmdd') " +
+                            "  FROM dams.USERINFO_ACTIVE_LAST_HISTORY WHERE TIME = TO_DATE('" + yesterday + "','yyyymmdd') " +
                             ") " +
                             "GROUP BY userid, TYPE";
                     DBUtil.excute(insertSql);
@@ -112,9 +112,9 @@ public class DataSupply {
     @Test
     public void CuccStb() {
 
-        String beginTime = "20180901";
+        String beginTime = "20200322";
 //        String endTime = "20191231";
-        String endTime = "20181231";
+        String endTime = "20200322";
         dateUtil.getDayList(beginTime, endTime, "yyyyMMdd", "yyyyMMdd").stream().forEach(
                 time -> {
 //                    String deleteSql = "DELETE FROM dams.USERINFO_ACTIVE_LAST_HISTORY_NEW1 WHERE TIME = TO_DATE('" + time + "','yyyymmdd')";
