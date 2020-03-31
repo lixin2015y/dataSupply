@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  oracle14:
+    datasource:
+      jdbc-url: jdbc:oracle:thin:@10.0.9.14:1521:DAMSNEW
+      username: dams
+      password: oracle
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+  mysql7:
+    datasource:
+      jdbc-url: jdbc:mysql://10.10.9.7:3307/attribution?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  hive53:
+    datasource:
+      jdbcUrl: jdbc:hive2://10.0.9.53:10000/default
+      username: hadoop
+      password: hadoop
+      driver-class-name: org.apache.hive.jdbc.HiveDriver
+  spark53:
+    datasource:
+      jdbcUrl: jdbc:hive2://10.0.9.53:20001/default
+      username: hadoop
+      password: hadoop
+      driver-class-name: org.apache.hive.jdbc.HiveDriver
+  application:
+    name: damsolap-new
+mybatis:
+  #mappers文件存放位置
+  #  mapperLocations: classpath:mybatis/mappers/*.xml
+  #配置文件存放位置
+  configLocation: classpath:mybatis/mybatis-config.xml
+logging:
+  level:
+    com:
+      viewstar: debug
+
+hadoop53:
+  fs.defaultFS: hdfs://10.0.9.53:8020
