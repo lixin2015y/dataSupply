@@ -42,12 +42,15 @@ public class CancelOrderPayment {
      */
     @Test
     public void test1() throws FileNotFoundException {
+
+        jdbcTemplate.update("delete from dams.CANCELORDERPAYMENT_TMP where month = 202004");
+
         //读取文件
-        FileInputStream inputStream = new FileInputStream(new File("截至到3月29日天津广电第三方的退费汇总.xlsx"));
+        FileInputStream inputStream = new FileInputStream(new File("退费明细天津市2020-04-01_2020-04-06（天津广电）.xlsx"));
         ExcelUtil excelUtil = new ExcelUtil();
         final List<Map<String, Object>> maps = excelUtil.readExcel(inputStream, "yyyyMMdd HH:mm:ss");
         maps.remove(0);
-        maps.stream().forEach(map -> map.put("账期", "202003"));
+        maps.stream().forEach(map -> map.put("账期", "202004"));
         String[] keys = new String[]{"立单日期", "省", "市", "客户名称", "退费账号", "投诉号码", "广电还是中心", "业务代码", "业务名称", "PRM代码", "业务开始账期", "业务金额", "退费日期", "退费状态", "退费人", "实际到账账号", "类型", "账期"};
 
         //插入数据库
@@ -66,7 +69,7 @@ public class CancelOrderPayment {
 
         HadoopFileUtil.DeleteHDFSFile("hdfs://10.0.9.53:8020/test/lixin/cancelpayment_tmp/202003");
         //读取文件
-        FileInputStream inputStream = new FileInputStream(new File("截至到3月29日天津广电第三方的退费汇总.xlsx"));
+        FileInputStream inputStream = new FileInputStream(new File("退费汇总2020-03-30~2020-03-31(天津广电).xlsx"));
         ExcelUtil excelUtil = new ExcelUtil();
         final List<Map<String, Object>> maps = excelUtil.readExcel(inputStream, "yyyyMMdd HH:mm:ss");
         List<String> lines = new ArrayList();
@@ -84,16 +87,15 @@ public class CancelOrderPayment {
     @Test
     public void test3() {
         String sql = "SELECT t11.userid,t11.productid,t11.productname,\n" +
-                "CASE WHEN MAX(t22.starttime) IS NULL THEN '否' ELSE '是' END AS rating,202003 AS MONTH,\n" +
-                "MAX(t22.starttime) as starttime\n" +
-                "FROM (\n" +
-                "  SELECT t1.userid,t1.productid,t1.canceltime,t1.productname FROM \n" +
+                "CASE WHEN MAX(t22.starttime) IS NULL THEN '否' ELSE '是' END AS rating,202003 AS MONTH,MAX(t22.starttime) as starttime  FROM  \n" +
+                "(\n" +
+                "  SELECT t1.userid,t1.productid,t1.canceltime,t1.productname,t2.channelid FROM \n" +
                 "  (SELECT userid,productid,canceltime,productname FROM lixin.cancelpayment_tmp WHERE MONTH = 202003) t1 \n" +
                 "  LEFT JOIN lixin.channelordername t2 \n" +
-                "  ON (t1.productid = t2.productid) WHERE t2.channelid IS NULL\n" +
+                "  ON (t1.productid = t2.productid) WHERE t2.channelid IS NOT NULL\n" +
                 ")t11\n" +
-                "LEFT JOIN (SELECT userid,sp,seconds,ptime,starttime FROM iptv.voduserparquet WHERE ptime >= 20200301) t22\n" +
-                "ON (t11.userid = t22.userid AND t22.sp LIKE concat('%',t11.productid,'%') AND t22.ptime > t11.canceltime)\n" +
+                "LEFT JOIN (SELECT userid,channelid, seconds,ptime,starttime FROM iptv.channeluserparquet WHERE ptime >= 20200301 and seconds >60) t22\n" +
+                "ON (t11.userid = t22.userid AND t22.channelid  = t11.channelid AND t22.ptime > t11.canceltime)\n" +
                 "GROUP BY t11.userid,t11.productid,t11.productname";
 
         final List<Map<String, Object>> maps = spark53.queryForList(sql);
@@ -118,11 +120,9 @@ public class CancelOrderPayment {
 
     private String getKongLingShu(Map map, String[] key, String month) {
         StringBuilder line = new StringBuilder();
-        Arrays.stream(key).forEach(v -> {
-            line.append(map.containsKey(v) ?
-                    (v.equals("退费日期") ? map.get(v).toString().replace(" ", "").replace(":", "").replace("-", "").split("\\.")[0] + '|' : map.get(v).toString() + '|')
-                    : '|');
-        });
+        Arrays.stream(key).forEach(v -> line.append(map.containsKey(v) ?
+                (v.equals("退费日期") ? map.get(v).toString().replace(" ", "").replace(":", "").replace("-", "").split("\\.")[0] + '|' : map.get(v).toString() + '|')
+                : '|'));
         line.append(month);
         return line.toString() + "\n";
     }

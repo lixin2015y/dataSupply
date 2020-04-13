@@ -7,22 +7,22 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class HadoopFileUtil {
 
 
-    public static void uploadFileHdfs() throws IOException {
+    public static void uploadFileHdfs(String originFilePath, String destFilePath) throws IOException {
         //1 创建连接
         Configuration conf = new Configuration();
         //2 连接端口
         conf.set("fs.defaultFS", "hdfs://10.0.9.53:8020");
-        conf.set("dfs.replication", "3");
         //3 获取连接对象
         FileSystem fs = FileSystem.get(conf);
         //本地文件上传到 hdfs
-        fs.copyFromLocalFile(new Path("/tmp/cancelpayment/20191201.txt"), new Path("/test/lixin/cancelpayment"));
+        fs.copyFromLocalFile(new Path(originFilePath), new Path(destFilePath));
         fs.close();
     }
 
@@ -42,7 +42,7 @@ public class HadoopFileUtil {
     }
 
 
-    public static void WriteToHDFS(String file, List<String> lines) throws IOException{
+    public static void WriteToHDFS(String file, List<String> lines) throws IOException {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(URI.create(file), conf);
         Path path = new Path(file);
@@ -64,5 +64,14 @@ public class HadoopFileUtil {
         //IOUtils.copyBytes(in, out, 4096, true)        //4096为一次复制块大小，true表示复制完成后关闭流
     }
 
+
+    public static String getLine(Map map, String[] key) {
+
+        StringBuilder line = new StringBuilder();
+        Arrays.stream(key).forEach(v -> {
+            line.append(map.containsKey(v) ? map.get(v) + "|" : '|');
+        });
+        return line.toString() + "\n";
+    }
 
 }

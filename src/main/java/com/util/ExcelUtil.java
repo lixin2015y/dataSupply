@@ -1,22 +1,24 @@
 package com.util;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.RegionUtil;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.Assert;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * excel导入导出 使用apache poi
@@ -283,6 +285,86 @@ public class ExcelUtil {
         RegionUtil.setBorderLeft(BorderStyle.THIN, region, row.getSheet());
         RegionUtil.setBorderRight(BorderStyle.THIN, region, row.getSheet());
         RegionUtil.setBorderTop(BorderStyle.THIN, region, row.getSheet());
+    }
+
+
+    public static Workbook exportExcelWithOutStyle(List<Map<String, Object>> data, List<String> key, List<String> headers) {
+        Workbook wb = new XSSFWorkbook();
+        Sheet sheet = wb.createSheet();
+        for (int i = 0; i < headers.size(); i++) {
+            sheet.setColumnWidth(i, headers.get(i).getBytes().length * 256);
+        }
+
+
+        //插入标题
+        Row headerRow = sheet.createRow(0);
+        Cell headerCell;
+        for (int i = 0; i < headers.size(); i++) {
+            headerCell = headerRow.createCell(i);
+            headerCell.setCellValue(headers.get(i));
+        }
+
+        //插入数据
+        Row row;
+        Cell cell;
+        for (int i = 0; i < data.size(); i++) {
+            row = sheet.createRow(i + 1);
+            for (int j = 0; j < key.size(); j++) {
+                cell = row.createCell(j);
+                if (data.get(i).containsKey(key.get(j))) {
+                    cell.setCellValue(data.get(i).get(key.get(j)) == null ? "" : data.get(i).get(key.get(j)).toString());
+                } else {
+                    cell.setCellValue("");
+                }
+            }
+        }
+        return wb;
+    }
+
+
+    public static SXSSFWorkbook bigDataExport(List<Map<String, Object>> data, List<String> keys, List<String> header) {
+        //使用可滑动窗体来解决内存开销大问题（实际就是读一点数据就写一点不占内存）
+        //设置窗体大小
+        SXSSFWorkbook wb = new SXSSFWorkbook(100);
+
+        Sheet sh = wb.createSheet();
+
+        for (int i = 0; i < data.size(); i++) {
+            Row row = sh.createRow(i);
+            for (int j = 0; j < keys.size(); j++) {
+                Cell cell = row.createCell(j);
+                final Object cellValue = data.get(i).containsKey(keys.get(j)) ? data.get(i).get(keys.get(j)) : null;
+                cell.setCellValue(cellValue == null ? null : cellValue.toString());
+            }
+        }
+
+        for (int i = 0; i < 1000; i++) {
+            sh.getRow(i);
+        }
+
+//        da
+
+        return wb;
+    }
+
+    public static void main(String[] args) throws IOException {
+        //使用可滑动窗体来解决内存开销大问题（实际就是读一点数据就写一点不占内存）
+        //设置窗体大小
+        SXSSFWorkbook wb = new SXSSFWorkbook(100000);
+        Sheet sh = wb.createSheet();
+        for (int rownum = 0; rownum < 300000; rownum++) {
+            Row row = sh.createRow(rownum);
+            for (int cellnum = 0; cellnum < 10; cellnum++) {
+                Cell cell = row.createCell(cellnum);
+                String address = new CellReference(cell).formatAsString();
+                cell.setCellValue(address);
+            }
+        }
+        FileOutputStream out = new FileOutputStream("sxssf.xlsx");
+        wb.write(out);
+        out.close();
+        // dispose of temporary files backing this workbook on disk
+        wb.dispose();
     }
 
 }
