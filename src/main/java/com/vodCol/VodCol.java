@@ -56,6 +56,7 @@ public class VodCol {
 
     }
 
+    //点播栏目导入hdfs
     @Test
     public void test2() throws IOException {
         final List<Map<String, Object>> maps = jdbcTemplate.queryForList("select colid,url,num from dams.tmp_col");
@@ -66,5 +67,8 @@ public class VodCol {
         });
         HadoopFileUtil.WriteToHDFS("hdfs://10.0.9.53:8020/test/lixin/vod_tmp/vod", lines);
     }
+
+
+
 
 }

@@ -30,7 +30,7 @@ public class ExcelUtil {
      * @param datePatten 时间格式
      * @return List(Map)
      */
-    public List<Map<String, Object>> readExcel(InputStream in, String datePatten) {
+    public static List<Map<String, Object>> readExcel(InputStream in, String datePatten) {
         final ArrayList<Map<String, Object>> list = new ArrayList();
         try (Workbook wb = WorkbookFactory.create(in)) {
             for (Sheet sheet : wb) {
@@ -52,7 +52,29 @@ public class ExcelUtil {
     }
 
 
-    private Object getCellValue(Cell cell, String datePatten) {
+    public static List<Map<String, Object>> readExcel(InputStream in, String datePatten, String sheetName) {
+        final ArrayList<Map<String, Object>> list = new ArrayList();
+        try (Workbook wb = WorkbookFactory.create(in)) {
+            final Sheet sheet = wb.getSheet(sheetName);
+            for (Row row : sheet) {
+                Map<String, Object> map = new HashMap();
+                for (Cell cell : row) {
+                    Object cellValue = getCellValue(cell, datePatten);
+                    map.put(getCellValue(sheet.getRow(0).getCell(cell.getColumnIndex()), datePatten).toString(), cellValue);
+                }
+                list.add(map);
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
+    private static Object getCellValue(Cell cell, String datePatten) {
         Object cellValue;
         SimpleDateFormat formatter = new SimpleDateFormat(datePatten);
         switch (cell.getCellType()) {
